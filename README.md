@@ -1,4 +1,4 @@
-# Procedural Vs Obiective (2020)
+# Procedural Vs Objective (2020)
 
 Autorzy: Mateusz Liber, Przemysław Lyschik
 
