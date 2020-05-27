@@ -1,7 +1,3 @@
-import datetime
-
-start_time = datetime.datetime.now()
-
 accounts = {}
 
 def is_account_exists(account_number):
@@ -50,28 +46,3 @@ def make_transfer(payer_account_number = 0, beneficiary_account_number = 0, mone
   make_withdraw(payer_account_number, money_amount)
   make_deposit(beneficiary_account_number, money_amount)
 
-create_account('Foo', 'Bar', 4578220122)
-create_account('Foo', 'Baz', 2347885320)
-create_account('Foo', 'Baz', 1174559614)
-
-for _ in range(0, 2_000_000):
-  make_deposit(4578220122, 2)
-  make_deposit(2347885320, 2)
-
-for _ in range(0, 1_000_000):
-  make_withdraw(4578220122, 1)
-  make_withdraw(2347885320, 1)
-
-for _ in range(0, 500_000):
-  make_transfer(4578220122, 2347885320, 3)
-
-for _ in range(0, 500_000):
-  make_transfer(2347885320, 4578220122, 2)
-
-print(get_account_balance(4578220122))
-print(get_account_balance(2347885320))
-print(get_account_balance(1174559614))
-
-end_time = datetime.datetime.now()
-
-print('Time elapsed: {0}'.format(end_time - start_time))

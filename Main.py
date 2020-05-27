@@ -13,6 +13,7 @@ from PyQt5.Qt import QLabel
 import datetime
 import random
 
+
 class VerticalLabel(QLabel):
 
     def __init__(self, *args):
@@ -324,16 +325,61 @@ class Ui_MainWindow(object):
 
 
 def operationProcedural(size):
-    tableToSort = []
-    for i in range(size):
-        tableToSort.append(random.randint(0, 1000))
-    tableToSort.sort()
+    import Procedural
+
+    Procedural.create_account('Foo', 'Bar', 4578220122)
+    Procedural.create_account('Foo', 'Baz', 2347885320)
+    Procedural.create_account('Foo', 'Baz', 1174559614)
+
+    for _ in range(0, size):
+        Procedural.make_deposit(4578220122, 2)
+        Procedural.make_deposit(2347885320, 2)
+
+    for _ in range(0, size):
+        Procedural.make_withdraw(4578220122, 1)
+        Procedural.make_withdraw(2347885320, 1)
+
+    for _ in range(0, size):
+        Procedural.make_transfer(4578220122, 2347885320, 3)
+
+    for _ in range(0, size):
+        Procedural.make_transfer(2347885320, 4578220122, 2)
+
 
 def operationObjective(size):
-    tableToSort = []
-    for i in range(size):
-        tableToSort.append(random.randint(0, 1000))
-    tableToSort.sort()
+    import OOP
+
+    owner_fixtures = [
+    OOP.Owner('Foo', 'Bar'),
+    OOP.Owner('Foo', 'Baz')
+    ]
+
+    account_fixtures = [
+    OOP.BankAccount(owner_fixtures[0], 4578220122),
+    OOP.BankAccount(owner_fixtures[1], 2347885320),
+    OOP.BankAccount(owner_fixtures[1], 1174559614)
+    ]
+
+    foo_bar_baz_bank = OOP.Bank()
+
+    foo_bar_baz_bank.add_account(account_fixtures[0])
+    foo_bar_baz_bank.add_account(account_fixtures[1])
+    foo_bar_baz_bank.add_account(account_fixtures[2])
+
+    for _ in range(0, 2_000_000):
+        foo_bar_baz_bank.make_deposit(foo_bar_baz_bank.get_account(4578220122), 2)
+        foo_bar_baz_bank.make_deposit(foo_bar_baz_bank.get_account(2347885320), 2)
+
+    for _ in range(0, 1_000_000):
+        foo_bar_baz_bank.make_withdraw(foo_bar_baz_bank.get_account(4578220122), 1)
+        foo_bar_baz_bank.make_withdraw(foo_bar_baz_bank.get_account(2347885320), 1)
+
+    for _ in range(0, 500_000):
+        foo_bar_baz_bank.make_transfer(foo_bar_baz_bank.get_account(4578220122), foo_bar_baz_bank.get_account(2347885320), 3)
+
+    for _ in range(0, 500_000):
+        foo_bar_baz_bank.make_transfer(foo_bar_baz_bank.get_account(2347885320), foo_bar_baz_bank.get_account(4578220122), 2)
+
 
 if __name__ == "__main__":
     import sys
