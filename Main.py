@@ -12,7 +12,8 @@ from pyqtgraph import PlotWidget
 from PyQt5.Qt import QLabel
 import datetime
 import random
-
+import Procedural
+import OOP
 
 class VerticalLabel(QLabel):
 
@@ -282,7 +283,6 @@ class Ui_MainWindow(object):
 
         return dataTable
 
-
     def count(self):
         """Counting how long opeartions last"""
         self.disableUI()
@@ -316,24 +316,28 @@ class Ui_MainWindow(object):
     def microsecondsToMiliseconds(self, time_micro):
         return time_micro/1000
 
+    def getNumberOfEachOperation(self, number_of_operations):
+        return int(number_of_operations/4)
 
-    def getExecutionTime(self, data_size, opeartion_type):
+
+    def getExecutionTime(self, operations_number, opeartion_type):
+        each_operation_number = self.getNumberOfEachOperation(operations_number)
+
         startTime = datetime.datetime.now()
-        opeartion_type(data_size)
+        opeartion_type(each_operation_number)
         endTime = datetime.datetime.now()
         return (endTime - startTime).microseconds
 
 
 def operationProcedural(size):
-    import Procedural
 
     Procedural.create_account('Foo', 'Bar', 4578220122)
     Procedural.create_account('Foo', 'Baz', 2347885320)
     Procedural.create_account('Foo', 'Baz', 1174559614)
 
     for _ in range(0, size):
-        Procedural.make_deposit(4578220122, 2)
-        Procedural.make_deposit(2347885320, 2)
+        Procedural.make_deposit(4578220122, 5)
+        Procedural.make_deposit(2347885320, 5)
 
     for _ in range(0, size):
         Procedural.make_withdraw(4578220122, 1)
@@ -345,10 +349,10 @@ def operationProcedural(size):
     for _ in range(0, size):
         Procedural.make_transfer(2347885320, 4578220122, 2)
 
+    Procedural.accounts = {}
+
 
 def operationObjective(size):
-    import OOP
-
     owner_fixtures = [
     OOP.Owner('Foo', 'Bar'),
     OOP.Owner('Foo', 'Baz')
@@ -366,18 +370,18 @@ def operationObjective(size):
     foo_bar_baz_bank.add_account(account_fixtures[1])
     foo_bar_baz_bank.add_account(account_fixtures[2])
 
-    for _ in range(0, 2_000_000):
-        foo_bar_baz_bank.make_deposit(foo_bar_baz_bank.get_account(4578220122), 2)
-        foo_bar_baz_bank.make_deposit(foo_bar_baz_bank.get_account(2347885320), 2)
+    for _ in range(0, size):
+        foo_bar_baz_bank.make_deposit(foo_bar_baz_bank.get_account(4578220122), 5)
+        foo_bar_baz_bank.make_deposit(foo_bar_baz_bank.get_account(2347885320), 5)
 
-    for _ in range(0, 1_000_000):
+    for _ in range(0, size):
         foo_bar_baz_bank.make_withdraw(foo_bar_baz_bank.get_account(4578220122), 1)
         foo_bar_baz_bank.make_withdraw(foo_bar_baz_bank.get_account(2347885320), 1)
 
-    for _ in range(0, 500_000):
+    for _ in range(0, size):
         foo_bar_baz_bank.make_transfer(foo_bar_baz_bank.get_account(4578220122), foo_bar_baz_bank.get_account(2347885320), 3)
 
-    for _ in range(0, 500_000):
+    for _ in range(0, size):
         foo_bar_baz_bank.make_transfer(foo_bar_baz_bank.get_account(2347885320), foo_bar_baz_bank.get_account(4578220122), 2)
 
 
