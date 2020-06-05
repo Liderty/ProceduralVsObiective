@@ -213,8 +213,8 @@ class Ui_MainWindow(object):
 
         self.threadpool = QThreadPool()
 
-        self.timeOutputAccessTableProcedural = [self.timeOutputField0, self.timeOutputField1, self.timeOutputField2, self.timeOutputField3, self.timeOutputField4]
-        self.timeOutputAccessTableObjective = [self.timeOutputField0_2, self.timeOutputField1_2, self.timeOutputField2_2, self.timeOutputField3_2, self.timeOutputField4_2]
+        self.timeOutputAccessTableObjective = [self.timeOutputField0, self.timeOutputField1, self.timeOutputField2, self.timeOutputField3, self.timeOutputField4]
+        self.timeOutputAccessTableProcedural = [self.timeOutputField0_2, self.timeOutputField1_2, self.timeOutputField2_2, self.timeOutputField3_2, self.timeOutputField4_2]
 
         self.executionTimes = [[0], [0]]
 
@@ -323,11 +323,16 @@ class Ui_MainWindow(object):
         self.updatePlots()
 
     def updatePlots(self):
-        self.plotArea.plot(self.getData()[:len(self.executionTimes[0])], self.executionTimes[0], pen=(0, 2), name='Proceduralnie')
-        self.plotArea.plot(self.getData()[:len(self.executionTimes[1])], self.executionTimes[1], pen=(1, 2), name='Obiektowo')
+        self.plotArea.plot(self.reduceDataForChartByTousend(self.getData()[:len(self.executionTimes[0])]), self.executionTimes[0], pen=(0, 2), name='Proceduralnie')
+        self.plotArea.plot(self.reduceDataForChartByTousend(self.getData()[:len(self.executionTimes[1])]), self.executionTimes[1], pen=(1, 2), name='Obiektowo')
 
-    def microsecondsToMiliseconds(self, time_micro):
-        return time_micro/1000
+    def reduceDataForChartByTousend(self, data):
+        new_data = []
+        
+        for element in data:
+            new_data.append(element/1000)
+
+        return new_data
 
     def multithreadExecute(self, operations_number, opeartion_type):
         worker = Worker(opeartion_type, operations_number)
@@ -421,6 +426,9 @@ class Worker(QRunnable):
     def getNumberOfEachOperation(self, number_of_operations):
         return int(number_of_operations/4)
 
+    def microsecondsToMiliseconds(self, time_micro):
+        return int(time_micro/1000)
+
     @pyqtSlot()
     def run(self):
         try:
@@ -430,7 +438,7 @@ class Worker(QRunnable):
             self.opeartion_type(each_operation_number)
             endTime = datetime.datetime.now()
 
-            result = ((endTime - startTime).microseconds, self.operations_number)
+            result = (self.microsecondsToMiliseconds((endTime - startTime).microseconds), self.operations_number)
         except:
             traceback.print_exc()
             exctype, value = sys.exc_info()[:2]
