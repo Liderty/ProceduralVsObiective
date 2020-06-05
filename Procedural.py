@@ -15,6 +15,9 @@ def create_account(owner_first_name = None, owner_last_name = None, account_numb
     'balance': 0
   }
 
+def clear_accounts():
+  accounts.clear()
+
 def get_account_balance(account_number = 0):
   if not is_account_exists(account_number):
     raise ValueError('Account with number {0} not found.'.format(account_number))

@@ -2,30 +2,21 @@
 
 # Form implementation generated from reading ui file 'ui.ui'
 #
-# Created by: PyQt5 UI code generator 5.14.2
+# Ui generated: PyQt5 UI code generator 5.14.2
+# Authors: Mateusz Liber, Przysław Lyschik
+# Data: May 2020
 #
 # WARNING! All changes made in this file will be lost!
 
-
 from PyQt5 import QtCore, QtGui, QtWidgets
-from pyqtgraph import PlotWidget
+from PyQt5.QtCore import *
 from PyQt5.Qt import QLabel
+import traceback, sys
+
+from pyqtgraph import PlotWidget
 import datetime
 import random
-import Procedural
 import OOP
-
-class VerticalLabel(QLabel):
-
-    def __init__(self, *args):
-        QLabel.__init__(self, *args)
-
-    def paintEvent(self, event):
-        painter = QtGui.QPainter(self)
-        painter.translate(0, self.height())
-        painter.rotate(-90)
-        painter.drawText(0, self.width()/2, self.text())
-        painter.end()
 
 
 class Ui_MainWindow(object):
@@ -220,8 +211,12 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
+        self.threadpool = QThreadPool()
+
         self.timeOutputAccessTableProcedural = [self.timeOutputField0, self.timeOutputField1, self.timeOutputField2, self.timeOutputField3, self.timeOutputField4]
         self.timeOutputAccessTableObjective = [self.timeOutputField0_2, self.timeOutputField1_2, self.timeOutputField2_2, self.timeOutputField3_2, self.timeOutputField4_2]
+
+        self.executionTimes = [[0], [0]]
 
         self.pushButton.clicked.connect(lambda : self.count())
 
@@ -246,21 +241,38 @@ class Ui_MainWindow(object):
         self.label_9.setText(_translate("MainWindow", "Proceduralnie"))
 
     def disableUI(self):
-        self.pushButton.setEnabled(False)
-        self.pushButton.blockSignals(True)
+        self.pushButton.setEnabled(False) #TODO: Not working jet
 
     def enableUI(self):
-        self.pushButton.setEnabled(True)
-        self.pushButton.blockSignals(False)
+        self.pushButton.setEnabled(True) #TODO: Not working jet
         
+    def clearTimeTables(self):
+        for elementProcedural in self.timeOutputAccessTableProcedural:
+            elementProcedural.setText("")
+
+        for elementObjective in self.timeOutputAccessTableObjective:
+            elementObjective.setText("")
+
+
     def clearChart(self):
         self.plotArea.clear()
+
+    def clearTimes(self):
+        self.executionTimes = [[0], [0]]
+
+    def clearData(self):
+        self.clearTimeTables()
+        self.clearChart()
+        self.clearTimes()
 
     def consolePrintLine(self, message):
         currentDateTime = datetime.datetime.now()
         currentDate = currentDateTime.strftime("%d/%m/%Y")
         currentTime = currentDateTime.strftime("%H:%M:%S")
         self.console.append("[" + str(currentDate) + " " + str(currentTime) + "] " + str(message))
+
+    def printExecutionTime(self, operation_type, operations_number, execution_time):
+            self.consolePrintLine(str(operation_type)+" wykonano "+str(operations_number)+" operacji w czasie "+str(execution_time)+" milisekund")
 
     def getData(self):
         dataTable = []
@@ -286,70 +298,71 @@ class Ui_MainWindow(object):
     def count(self):
         """Counting how long opeartions last"""
         self.disableUI()
-        self.clearChart()
-        self.consolePrintLine("Rozpoczęto obliczenia")
+        self.clearData()
+        self.consolePrintLine("Start opearcji")
 
         numberOfOperations = self.getData()
-        executionTimes = [[], []]
-
-        executionTimes[0].append(0)
-        executionTimes[1].append(0)        
 
         for k in range(1, len(numberOfOperations)):
-            executioneOne = self.microsecondsToMiliseconds(self.getExecutionTime(numberOfOperations[k], operationProcedural))
-            executionTimes[0].append(executioneOne)
-            exectutionTwo = self.microsecondsToMiliseconds(self.getExecutionTime(numberOfOperations[k], operationObjective))
-            executionTimes[1].append(exectutionTwo/2)
+            self.multithreadExecute(numberOfOperations[k], operationProcedural)
+            self.multithreadExecute(numberOfOperations[k], operationObjective)
 
-            self.timeOutputAccessTableProcedural[k-1].setText(str(executioneOne))
-            self.timeOutputAccessTableObjective[k-1].setText(str(exectutionTwo))
-
-            self.consolePrintLine("Proceduralnie wykonano "+str(numberOfOperations[k])+" operacji w czasie "+str(executioneOne)+" milisekund")
-            self.consolePrintLine("Obiektowo wykonano "+str(numberOfOperations[k])+" operacji wykonano w czasie "+str(exectutionTwo)+" milisekund")
-
-        self.plotArea.plot(numberOfOperations, executionTimes[0], pen=(0, 2), name='Proceduralnie')
-        self.plotArea.plot(numberOfOperations, executionTimes[1], pen=(1, 2), name='Obiektowo')
-
-        self.consolePrintLine("Zakończono obliczenia")
+        self.consolePrintLine("Koniec operacji")
         self.enableUI()
+
+    def updateProcedural(self, result):
+        self.executionTimes[0].append(result[0])
+        self.printExecutionTime("Proceduralnie", result[1], self.executionTimes[0][-1])
+        self.timeOutputAccessTableProcedural[len(self.executionTimes[0]) - 2].setText(str(result[0]))
+        self.updatePlots()
+
+    def updateObjective(self, result):
+        self.executionTimes[1].append(result[0])
+        self.printExecutionTime("Obiektowo", result[1], self.executionTimes[1][-1])
+        self.timeOutputAccessTableObjective[len(self.executionTimes[1]) - 2].setText(str(result[0]))
+        self.updatePlots()
+
+    def updatePlots(self):
+        self.plotArea.plot(self.getData()[:len(self.executionTimes[0])], self.executionTimes[0], pen=(0, 2), name='Proceduralnie')
+        self.plotArea.plot(self.getData()[:len(self.executionTimes[1])], self.executionTimes[1], pen=(1, 2), name='Obiektowo')
 
     def microsecondsToMiliseconds(self, time_micro):
         return time_micro/1000
 
-    def getNumberOfEachOperation(self, number_of_operations):
-        return int(number_of_operations/4)
+    def multithreadExecute(self, operations_number, opeartion_type):
+        worker = Worker(opeartion_type, operations_number)
+        
+        if(opeartion_type == operationProcedural):
+            worker.signals.result.connect(self.updateProcedural)
+        else:
+            worker.signals.result.connect(self.updateObjective)
 
-
-    def getExecutionTime(self, operations_number, opeartion_type):
-        each_operation_number = self.getNumberOfEachOperation(operations_number)
-
-        startTime = datetime.datetime.now()
-        opeartion_type(each_operation_number)
-        endTime = datetime.datetime.now()
-        return (endTime - startTime).microseconds
+        self.threadpool.start(worker)
 
 
 def operationProcedural(size):
+    import Procedural
+    thisProdural = Procedural
 
-    Procedural.create_account('Foo', 'Bar', 4578220122)
-    Procedural.create_account('Foo', 'Baz', 2347885320)
-    Procedural.create_account('Foo', 'Baz', 1174559614)
-
-    for _ in range(0, size):
-        Procedural.make_deposit(4578220122, 5)
-        Procedural.make_deposit(2347885320, 5)
+    thisProdural.create_account('Foo', 'Bar', 4578220122)
+    thisProdural.create_account('Foo', 'Baz', 2347885320)
+    thisProdural.create_account('Foo', 'Baz', 1174559614)
 
     for _ in range(0, size):
-        Procedural.make_withdraw(4578220122, 1)
-        Procedural.make_withdraw(2347885320, 1)
+        thisProdural.make_deposit(4578220122, 5)
+        thisProdural.make_deposit(2347885320, 5)
 
     for _ in range(0, size):
-        Procedural.make_transfer(4578220122, 2347885320, 3)
+        thisProdural.make_withdraw(4578220122, 1)
+        thisProdural.make_withdraw(2347885320, 1)
 
     for _ in range(0, size):
-        Procedural.make_transfer(2347885320, 4578220122, 2)
+        thisProdural.make_transfer(4578220122, 2347885320, 3)
 
-    Procedural.accounts = {}
+    for _ in range(0, size):
+        thisProdural.make_transfer(2347885320, 4578220122, 2)
+
+    thisProdural.clear_accounts()
 
 
 def operationObjective(size):
@@ -383,6 +396,55 @@ def operationObjective(size):
 
     for _ in range(0, size):
         foo_bar_baz_bank.make_transfer(foo_bar_baz_bank.get_account(2347885320), foo_bar_baz_bank.get_account(4578220122), 2)
+
+
+class VerticalLabel(QLabel):
+    def __init__(self, *args):
+        QLabel.__init__(self, *args)
+
+    def paintEvent(self, event):
+        painter = QtGui.QPainter(self)
+        painter.translate(0, self.height())
+        painter.rotate(-90)
+        painter.drawText(0, self.width()/2, self.text())
+        painter.end()
+
+
+class Worker(QRunnable):
+
+    def __init__(self, opeartion_type, operations_number):
+        super(Worker, self).__init__()
+        self.opeartion_type = opeartion_type
+        self.operations_number = operations_number
+        self.signals = WorkerSignals()
+
+    def getNumberOfEachOperation(self, number_of_operations):
+        return int(number_of_operations/4)
+
+    @pyqtSlot()
+    def run(self):
+        try:
+            each_operation_number = self.getNumberOfEachOperation(self.operations_number)
+
+            startTime = datetime.datetime.now()
+            self.opeartion_type(each_operation_number)
+            endTime = datetime.datetime.now()
+
+            result = ((endTime - startTime).microseconds, self.operations_number)
+        except:
+            traceback.print_exc()
+            exctype, value = sys.exc_info()[:2]
+            self.signals.error.emit((exctype, value, traceback.format_exc()))
+        else:
+            self.signals.result.emit(result)
+        finally:
+            self.signals.finished.emit()
+
+
+class WorkerSignals(QObject):
+    finished = pyqtSignal()
+    error = pyqtSignal(tuple)
+    result = pyqtSignal(object)
 
 
 if __name__ == "__main__":
