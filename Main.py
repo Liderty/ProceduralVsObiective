@@ -17,6 +17,7 @@ from pyqtgraph import PlotWidget
 import datetime
 import random
 import OOP
+import Procedural
 
 
 class Ui_MainWindow(object):
@@ -213,9 +214,12 @@ class Ui_MainWindow(object):
 
         self.threadpool = QThreadPool()
 
+        self.operationCheckBoxes = [self.additionalOperationsCheckBox1, self.additionalOperationsCheckBox2, self.additionalOperationsCheckBox3, self.additionalOperationsCheckBox4]
+        self.operationsNumberFields = [self.operationsNumberField0, self.operationsNumberField1, self.operationsNumberField2, self.operationsNumberField3, self.operationsNumberField4]
         self.timeOutputAccessTableObjective = [self.timeOutputField0, self.timeOutputField1, self.timeOutputField2, self.timeOutputField3, self.timeOutputField4]
         self.timeOutputAccessTableProcedural = [self.timeOutputField0_2, self.timeOutputField1_2, self.timeOutputField2_2, self.timeOutputField3_2, self.timeOutputField4_2]
 
+        self.mainOperationsNumber = 0
         self.executionTimes = [[0], [0]]
 
         self.pushButton.clicked.connect(lambda : self.count())
@@ -241,10 +245,22 @@ class Ui_MainWindow(object):
         self.label_9.setText(_translate("MainWindow", "Proceduralnie"))
 
     def disableUI(self):
-        self.pushButton.setEnabled(False) #TODO: Not working jet
+        self.pushButton.setEnabled(False)
+        
+        for numberField in self.operationsNumberFields:
+            numberField.setEnabled(False)
+
+        for checkBox in self.operationCheckBoxes:
+            checkBox.setEnabled(False)
 
     def enableUI(self):
-        self.pushButton.setEnabled(True) #TODO: Not working jet
+        self.pushButton.setEnabled(True)
+
+        for numberField in self.operationsNumberFields:
+            numberField.setEnabled(True)
+
+        for checkBox in self.operationCheckBoxes:
+            checkBox.setEnabled(True)
         
     def clearTimeTables(self):
         for elementProcedural in self.timeOutputAccessTableProcedural:
@@ -253,6 +269,16 @@ class Ui_MainWindow(object):
         for elementObjective in self.timeOutputAccessTableObjective:
             elementObjective.setText("")
 
+    def isCalculationFinished(self):
+        for elementProcedural in self.timeOutputAccessTableProcedural[:self.mainOperationsNumber-1]:
+            if(elementProcedural.text() == ""):
+                return False
+
+        for elementObjective in self.timeOutputAccessTableObjective[:self.mainOperationsNumber-1]:
+            if(elementObjective.text() == ""):
+                return False
+
+        return True 
 
     def clearChart(self):
         self.plotArea.clear()
@@ -296,31 +322,36 @@ class Ui_MainWindow(object):
         return dataTable
 
     def count(self):
-        """Counting how long opeartions last"""
+        """Counting how long opeartions last in multi threads"""
         self.disableUI()
         self.clearData()
         self.consolePrintLine("Start opearcji")
 
         numberOfOperations = self.getData()
+        self.mainOperationsNumber = len(numberOfOperations)
 
         for k in range(1, len(numberOfOperations)):
             self.multithreadExecute(numberOfOperations[k], operationProcedural)
             self.multithreadExecute(numberOfOperations[k], operationObjective)
-
-        self.consolePrintLine("Koniec operacji")
-        self.enableUI()
 
     def updateProcedural(self, result):
         self.executionTimes[0].append(result[0])
         self.printExecutionTime("Proceduralnie", result[1], self.executionTimes[0][-1])
         self.timeOutputAccessTableProcedural[len(self.executionTimes[0]) - 2].setText(str(result[0]))
         self.updatePlots()
+        if(self.isCalculationFinished()):
+            self.enableUI()
+            self.consolePrintLine("Koniec operacji")
+
 
     def updateObjective(self, result):
         self.executionTimes[1].append(result[0])
         self.printExecutionTime("Obiektowo", result[1], self.executionTimes[1][-1])
         self.timeOutputAccessTableObjective[len(self.executionTimes[1]) - 2].setText(str(result[0]))
         self.updatePlots()
+        if(self.isCalculationFinished()):
+            self.enableUI()
+            self.consolePrintLine("Koniec operacji")
 
     def updatePlots(self):
         self.plotArea.plot(self.reduceDataForChartByTousend(self.getData()[:len(self.executionTimes[0])]), self.executionTimes[0], pen=(0, 2), name='Proceduralnie')
@@ -346,7 +377,6 @@ class Ui_MainWindow(object):
 
 
 def operationProcedural(size):
-    import Procedural
     thisProdural = Procedural
 
     thisProdural.create_account('Foo', 'Bar', 4578220122)
