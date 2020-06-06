@@ -377,27 +377,27 @@ class Ui_MainWindow(object):
 
 
 def operationProcedural(size):
-    thisProdural = Procedural
+    accounts = {}
 
-    thisProdural.create_account('Foo', 'Bar', 4578220122)
-    thisProdural.create_account('Foo', 'Baz', 2347885320)
-    thisProdural.create_account('Foo', 'Baz', 1174559614)
-
-    for _ in range(0, size):
-        thisProdural.make_deposit(4578220122, 5)
-        thisProdural.make_deposit(2347885320, 5)
+    Procedural.create_account(accounts, 'Foo', 'Bar', 4578220122)
+    Procedural.create_account(accounts, 'Foo', 'Baz', 2347885320)
+    Procedural.create_account(accounts, 'Foo', 'Baz', 1174559614)
 
     for _ in range(0, size):
-        thisProdural.make_withdraw(4578220122, 1)
-        thisProdural.make_withdraw(2347885320, 1)
+        Procedural.make_deposit(accounts, 4578220122, 5)
+        Procedural.make_deposit(accounts, 2347885320, 5)
 
     for _ in range(0, size):
-        thisProdural.make_transfer(4578220122, 2347885320, 3)
+        Procedural.make_withdraw(accounts, 4578220122, 1)
+        Procedural.make_withdraw(accounts, 2347885320, 1)
 
     for _ in range(0, size):
-        thisProdural.make_transfer(2347885320, 4578220122, 2)
+        Procedural.make_transfer(accounts, 4578220122, 2347885320, 3)
 
-    thisProdural.clear_accounts()
+    for _ in range(0, size):
+        Procedural.make_transfer(accounts, 2347885320, 4578220122, 2)
+
+    Procedural.clear_accounts(accounts)
 
 
 def operationObjective(size):
