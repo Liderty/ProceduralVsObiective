@@ -286,19 +286,23 @@ class Ui_MainWindow(object):
     def clearTimes(self):
         self.executionTimes = [[0], [0]]
 
+    def clearConsole(self):
+        self.console.clear()
+
     def clearData(self):
         self.clearTimeTables()
         self.clearChart()
         self.clearTimes()
+        self.clearConsole()
 
     def consolePrintLine(self, message):
-        currentDateTime = datetime.datetime.now()
-        currentDate = currentDateTime.strftime("%d/%m/%Y")
-        currentTime = currentDateTime.strftime("%H:%M:%S")
-        self.console.append("[" + str(currentDate) + " " + str(currentTime) + "] " + str(message))
+        dateTimeNow = datetime.datetime.now()
+        currentDateTime = dateTimeNow.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+
+        self.console.append("[{0}] {1}".format(str(currentDateTime), str(message)))
 
     def printExecutionTime(self, operation_type, operations_number, execution_time):
-            self.consolePrintLine(str(operation_type)+" wykonano "+str(operations_number)+" operacji w czasie "+str(execution_time)+" milisekund")
+        self.consolePrintLine("Wykonanie {0} operacji w podejściu {1} zajęło {2} ms".format(operations_number, operation_type, execution_time))
 
     def getData(self):
         dataTable = []
@@ -325,7 +329,7 @@ class Ui_MainWindow(object):
         """Counting how long opeartions last in multi threads"""
         self.disableUI()
         self.clearData()
-        self.consolePrintLine("Start opearcji")
+        self.consolePrintLine("Rozpoczęto obliczenia")
 
         numberOfOperations = self.getData()
         self.mainOperationsNumber = len(numberOfOperations)
@@ -336,22 +340,22 @@ class Ui_MainWindow(object):
 
     def updateProcedural(self, result):
         self.executionTimes[0].append(result[0])
-        self.printExecutionTime("Proceduralnie", result[1], self.executionTimes[0][-1])
+        self.printExecutionTime("proceduralnym", result[1], self.executionTimes[0][-1])
         self.timeOutputAccessTableProcedural[len(self.executionTimes[0]) - 2].setText(str(result[0]))
         self.updatePlots()
         if(self.isCalculationFinished()):
             self.enableUI()
-            self.consolePrintLine("Koniec operacji")
+            self.consolePrintLine("Zakończono obliczenia")
 
 
     def updateObjective(self, result):
         self.executionTimes[1].append(result[0])
-        self.printExecutionTime("Obiektowo", result[1], self.executionTimes[1][-1])
+        self.printExecutionTime("obiektowym", result[1], self.executionTimes[1][-1])
         self.timeOutputAccessTableObjective[len(self.executionTimes[1]) - 2].setText(str(result[0]))
         self.updatePlots()
         if(self.isCalculationFinished()):
             self.enableUI()
-            self.consolePrintLine("Koniec operacji")
+            self.consolePrintLine("Zakończono obliczenia")
 
     def updatePlots(self):
         self.plotArea.plot(self.reduceDataForChartByTousend(self.getData()[:len(self.executionTimes[0])]), self.executionTimes[0], pen=(0, 2), name='Proceduralnie')
@@ -402,35 +406,34 @@ def operationProcedural(size):
 
 def operationObjective(size):
     owner_fixtures = [
-    OOP.Owner('Foo', 'Bar'),
-    OOP.Owner('Foo', 'Baz')
+        OOP.Owner('Foo', 'Bar'),
+        OOP.Owner('Foo', 'Baz')
     ]
 
     account_fixtures = [
-    OOP.BankAccount(owner_fixtures[0], 4578220122),
-    OOP.BankAccount(owner_fixtures[1], 2347885320),
-    OOP.BankAccount(owner_fixtures[1], 1174559614)
+        OOP.BankAccount(owner_fixtures[0], 4578220122),
+        OOP.BankAccount(owner_fixtures[1], 2347885320),
+        OOP.BankAccount(owner_fixtures[1], 1174559614)
     ]
 
-    foo_bar_baz_bank = OOP.Bank()
-
-    foo_bar_baz_bank.add_account(account_fixtures[0])
-    foo_bar_baz_bank.add_account(account_fixtures[1])
-    foo_bar_baz_bank.add_account(account_fixtures[2])
-
-    for _ in range(0, size):
-        foo_bar_baz_bank.make_deposit(foo_bar_baz_bank.get_account(4578220122), 5)
-        foo_bar_baz_bank.make_deposit(foo_bar_baz_bank.get_account(2347885320), 5)
+    bank = OOP.Bank()
+    bank.add_account(account_fixtures[0])
+    bank.add_account(account_fixtures[1])
+    bank.add_account(account_fixtures[2])
 
     for _ in range(0, size):
-        foo_bar_baz_bank.make_withdraw(foo_bar_baz_bank.get_account(4578220122), 1)
-        foo_bar_baz_bank.make_withdraw(foo_bar_baz_bank.get_account(2347885320), 1)
+        bank.make_deposit(bank.get_account(4578220122), 5)
+        bank.make_deposit(bank.get_account(2347885320), 5)
 
     for _ in range(0, size):
-        foo_bar_baz_bank.make_transfer(foo_bar_baz_bank.get_account(4578220122), foo_bar_baz_bank.get_account(2347885320), 3)
+        bank.make_withdraw(bank.get_account(4578220122), 1)
+        bank.make_withdraw(bank.get_account(2347885320), 1)
 
     for _ in range(0, size):
-        foo_bar_baz_bank.make_transfer(foo_bar_baz_bank.get_account(2347885320), foo_bar_baz_bank.get_account(4578220122), 2)
+        bank.make_transfer(bank.get_account(4578220122), bank.get_account(2347885320), 3)
+
+    for _ in range(0, size):
+        bank.make_transfer(bank.get_account(2347885320), bank.get_account(4578220122), 2)
 
 
 class VerticalLabel(QLabel):
