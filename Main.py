@@ -509,7 +509,6 @@ class UIMainWindow(object):
             edition_flag = 0
 
             for i in range(len(sorted_table)-1):
-                print(i)
                 if(sorted_table[i] > sorted_table[i+1]):
                     tmp = sorted_table[i]
                     sorted_table[i] = sorted_table[i+1] 
