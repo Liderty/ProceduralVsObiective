@@ -384,11 +384,11 @@ class UIMainWindow(object):
 
     def is_calculation_finished(self):
         for element in self.procedural_times_output_fields[:self.main_operations_number - 1]:
-            if element.text() == "":
+            if element.text() == "-":
                 return False
 
         for element in self.oop_times_output_fields[:self.main_operations_number - 1]:
-            if element.text() == "":
+            if element.text() == "-":
                 return False
 
         return True
