@@ -164,30 +164,35 @@ class UIMainWindow(object):
         self.operations_amount_fields.insert(0, QtWidgets.QSpinBox(self.operations_amount_widget))
         self.operations_amount_fields[0].setObjectName("operations_amount_field_0")
         self.operations_amount_fields[0].setRange(10000, 1000000)
+        self.operations_amount_fields[0].setSingleStep(1000)
         self.operations_amount_fields[0].setValue(15000)
         self.operations_amount_layout.addWidget(self.operations_amount_fields[0])
 
         self.operations_amount_fields.insert(1, QtWidgets.QSpinBox(self.operations_amount_widget))
         self.operations_amount_fields[1].setObjectName("operations_amount_field_1")
         self.operations_amount_fields[1].setRange(10000, 1000000)
+        self.operations_amount_fields[1].setSingleStep(1000)
         self.operations_amount_fields[1].setValue(50000)
         self.operations_amount_layout.addWidget(self.operations_amount_fields[1])
 
         self.operations_amount_fields.insert(2, QtWidgets.QSpinBox(self.operations_amount_widget))
         self.operations_amount_fields[2].setObjectName("operations_amount_field_2")
         self.operations_amount_fields[2].setRange(10000, 1000000)
+        self.operations_amount_fields[2].setSingleStep(1000)
         self.operations_amount_fields[2].setValue(150000)
         self.operations_amount_layout.addWidget(self.operations_amount_fields[2])
 
         self.operations_amount_fields.insert(3, QtWidgets.QSpinBox(self.operations_amount_widget))
         self.operations_amount_fields[3].setObjectName("operations_amount_field_3")
         self.operations_amount_fields[3].setRange(10000, 1000000)
+        self.operations_amount_fields[3].setSingleStep(1000)
         self.operations_amount_fields[3].setValue(300000)
         self.operations_amount_layout.addWidget(self.operations_amount_fields[3])
 
         self.operations_amount_fields.insert(4, QtWidgets.QSpinBox(self.operations_amount_widget))
         self.operations_amount_fields[4].setObjectName("operations_amount_field_4")
         self.operations_amount_fields[4].setRange(10000, 1000000)
+        self.operations_amount_fields[4].setSingleStep(1000)
         self.operations_amount_fields[4].setValue(1000000)
         self.operations_amount_layout.addWidget(self.operations_amount_fields[4])
 
@@ -499,7 +504,9 @@ class UIMainWindow(object):
         )
 
     def prepare_chart_data(self, data_id):
-        number_of_operations = self.reduce_data_for_chart_by_thousand(self.get_data()[:len(self.execution_times[data_id])])
+        number_of_operations = self.reduce_data_for_chart_by_thousand(
+            self.get_data()[:len(self.execution_times[data_id])]
+        )
         times = self.execution_times[data_id]
 
         return self.sort_two_tables_by_first(number_of_operations, times)
@@ -508,19 +515,19 @@ class UIMainWindow(object):
         while True:
             edition_flag = 0
 
-            for i in range(len(sorted_table)-1):
-                if(sorted_table[i] > sorted_table[i+1]):
+            for i in range(len(sorted_table) - 1):
+                if sorted_table[i] > sorted_table[i + 1]:
                     tmp = sorted_table[i]
-                    sorted_table[i] = sorted_table[i+1] 
-                    sorted_table[i+1] = tmp
+                    sorted_table[i] = sorted_table[i + 1]
+                    sorted_table[i + 1] = tmp
 
                     tmp_other = other_table[i]
-                    other_table[i] = other_table[i+1] 
-                    other_table[i+1] = tmp_other
+                    other_table[i] = other_table[i + 1]
+                    other_table[i + 1] = tmp_other
 
                     edition_flag += 1
 
-            if(edition_flag == 0):
+            if edition_flag == 0:
                 return (sorted_table, other_table)
 
     def reduce_data_for_chart_by_thousand(self, data):
