@@ -1,402 +1,520 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui.ui'
-#
-# Ui generated: PyQt5 UI code generator 5.14.2
-# Authors: Mateusz Liber, Przysław Lyschik
-# Data: May 2020
-#
-# WARNING! All changes made in this file will be lost!
+import datetime
+import traceback
+from typing import List
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import *
 from PyQt5.Qt import QLabel
-import traceback, sys
+from PyQt5.QtCore import *
+from pyqtgraph import PlotWidget
 
-from pyqtgraph import PlotWidget, mkPen
-import datetime
-import random
 import OOP
 import Procedural
 
 
-class Ui_MainWindow(object):
-    def setupUi(self, MainWindow):
-        MainWindow.setObjectName("MainWindow")
-        MainWindow.setFixedSize(880, 430)
-        self.centralwidget = QtWidgets.QWidget(MainWindow)
-        self.centralwidget.setObjectName("centralwidget")
-        self.pushButton = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton.setGeometry(QtCore.QRect(10, 240, 241, 41))
-        self.pushButton.setObjectName("pushButton")
-        self.label = QtWidgets.QLabel(self.centralwidget)
-        self.label.setGeometry(QtCore.QRect(10, 40, 91, 16))
-        self.label.setObjectName("label")
-        self.label_2 = QtWidgets.QLabel(self.centralwidget)
-        self.label_2.setGeometry(QtCore.QRect(110, 40, 141, 16))
-        self.label_2.setObjectName("label_2")
-        self.label_3 = QtWidgets.QLabel(self.centralwidget)
-        self.label_3.setGeometry(QtCore.QRect(290, 10, 231, 21))
-        font = QtGui.QFont()
-        font.setPointSize(12)
-        self.label_3.setFont(font)
-        self.label_3.setObjectName("label_3")
-        self.console = QtWidgets.QTextBrowser(self.centralwidget)
+class UIMainWindow(object):
+    labels: List[QtWidgets.QLabel]
+    operations_amount_fields: List[QtWidgets.QSpinBox]
+    additional_operations_checkboxes: List[QtWidgets.QCheckBox]
+    procedural_times_output_fields: List[QtWidgets.QLineEdit]
+    oop_times_output_fields: List[QtWidgets.QLineEdit]
+
+    def __init__(self):
+        self.labels = []
+        self.operations_amount_fields = []
+        self.additional_operations_checkboxes = []
+        self.procedural_times_output_fields = []
+        self.oop_times_output_fields = []
+
+        self.thread_pool = QThreadPool()
+        self.thread_pool.setMaxThreadCount(1)
+
+        self.main_operations_number = 0
+        self.execution_times = [[0], [0]]
+
+    def setup_ui(self, MainWindow):
+        font_size_9 = QtGui.QFont()
+        font_size_9.setPointSize(9)
+
+        font_size_10 = QtGui.QFont()
+        font_size_10.setPointSize(10)
+
+        font_size_12 = QtGui.QFont()
+        font_size_12.setPointSize(12)
+
+        self.central_widget = QtWidgets.QWidget(MainWindow)
+        self.central_widget.setObjectName("central_widget")
+
+        self.labels.insert(0, QtWidgets.QLabel(self.central_widget))
+        self.labels[0].setObjectName("label_operation_amount")
+        self.labels[0].setGeometry(QtCore.QRect(10, 40, 91, 16))
+        self.labels[0].setText(QtCore.QCoreApplication.translate(
+            "MainWindow",
+            "Ilość operacji"
+        ))
+
+        self.labels.insert(1, QtWidgets.QLabel(self.central_widget))
+        self.labels[1].setObjectName("label_operations_select")
+        self.labels[1].setGeometry(QtCore.QRect(110, 40, 141, 16))
+        self.labels[1].setText(QtCore.QCoreApplication.translate(
+            "MainWindow",
+            "Wybór operacji do wykonania"
+        ))
+
+        self.labels.insert(2, QtWidgets.QLabel(self.central_widget))
+        self.labels[2].setObjectName("label_elapsed_time")
+        self.labels[2].setGeometry(QtCore.QRect(290, 10, 231, 21))
+        self.labels[2].setText(QtCore.QCoreApplication.translate(
+            "MainWindow",
+            "Czasy wykonania (milisekundy)"
+        ))
+        self.labels[2].setFont(font_size_12)
+
+        self.labels.insert(3, QtWidgets.QLabel(self.central_widget))
+        self.labels[3].setObjectName("label_result_console")
+        self.labels[3].setGeometry(QtCore.QRect(10, 310, 111, 16))
+        self.labels[3].setText(QtCore.QCoreApplication.translate(
+            "MainWindow",
+            "Konsola wynikowa"
+        ))
+        self.labels[3].setFont(font_size_10)
+
+        self.labels.insert(4, QtWidgets.QLabel(self.central_widget))
+        self.labels[4].setObjectName("label_time_chart_by_approach")
+        self.labels[4].setGeometry(QtCore.QRect(550, 10, 321, 21))
+        self.labels[4].setText(QtCore.QCoreApplication.translate(
+            "MainWindow",
+            "Wykres czasu działania programu w zależności od podejścia"
+        ))
+        self.labels[4].setFont(font_size_9)
+
+        self.labels.insert(5, QtWidgets.QLabel(self.central_widget))
+        self.labels[5].setObjectName("label_operations_amount")
+        self.labels[5].setGeometry(QtCore.QRect(550, 260, 321, 30))
+        self.labels[5].setAlignment(QtCore.Qt.AlignCenter)
+        self.labels[5].setText(QtCore.QCoreApplication.translate(
+            "MainWindow",
+            "Ilość operacji (w tysiącach)"
+        ))
+        self.labels[5].setFont(font_size_10)
+
+        self.labels.insert(6, VerticalLabel(self.central_widget))
+        self.labels[6].setObjectName("label_chart_elapsed_time")
+        self.labels[6].setGeometry(QtCore.QRect(520, 40, 30, 221))
+        self.labels[6].setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.labels[6].setAutoFillBackground(False)
+        self.labels[6].setScaledContents(False)
+        self.labels[6].setWordWrap(False)
+        self.labels[6].setOpenExternalLinks(False)
+        self.labels[6].setText(QtCore.QCoreApplication.translate(
+            "MainWindow",
+            "Czas wykonania (milisekundy)"
+        ))
+        self.labels[6].setFont(font_size_10)
+
+        self.labels.insert(7, QtWidgets.QLabel(self.central_widget))
+        self.labels[7].setObjectName("label_input_data")
+        self.labels[7].setGeometry(QtCore.QRect(10, 10, 121, 21))
+        self.labels[7].setText(QtCore.QCoreApplication.translate(
+            "MainWindow",
+            "Dane wejściowe"
+        ))
+        self.labels[7].setFont(font_size_12)
+
+        self.labels.insert(8, QtWidgets.QLabel(self.central_widget))
+        self.labels[8].setObjectName("label_procedural")
+        self.labels[8].setGeometry(QtCore.QRect(290, 40, 107, 26))
+        self.labels[8].setAlignment(QtCore.Qt.AlignCenter)
+        self.labels[8].setStyleSheet("background-color: #f00")
+        self.labels[8].setText(QtCore.QCoreApplication.translate(
+            "MainWindow",
+            "Proceduralnie"
+        ))
+
+        self.labels.insert(9, QtWidgets.QLabel(self.central_widget))
+        self.labels[9].setObjectName("label_oop")
+        self.labels[9].setGeometry(QtCore.QRect(403, 40, 108, 26))
+        self.labels[9].setAlignment(QtCore.Qt.AlignCenter)
+        self.labels[9].setStyleSheet("background-color: #0ff")
+        self.labels[9].setText(QtCore.QCoreApplication.translate(
+            "MainWindow",
+            "Obiektowo"
+        ))
+
+        self.vertical_line = QtWidgets.QFrame(self.central_widget)
+        self.vertical_line.setObjectName("vertical_line")
+        self.vertical_line.setGeometry(QtCore.QRect(260, 10, 21, 271))
+        self.vertical_line.setFrameShape(QtWidgets.QFrame.VLine)
+        self.vertical_line.setFrameShadow(QtWidgets.QFrame.Sunken)
+
+        self.horizontal_line = QtWidgets.QFrame(self.central_widget)
+        self.horizontal_line.setObjectName("horizontal_line")
+        self.horizontal_line.setGeometry(QtCore.QRect(10, 290, 861, 20))
+        self.horizontal_line.setFrameShape(QtWidgets.QFrame.HLine)
+        self.horizontal_line.setFrameShadow(QtWidgets.QFrame.Sunken)
+
+        self.operations_amount_widget = QtWidgets.QWidget(self.central_widget)
+        self.operations_amount_widget.setGeometry(QtCore.QRect(10, 60, 91, 171))
+        self.operations_amount_widget.setObjectName("operations_amount_widget")
+
+        self.operations_amount_layout = QtWidgets.QVBoxLayout(self.operations_amount_widget)
+        self.operations_amount_layout.setContentsMargins(0, 0, 0, 0)
+        self.operations_amount_layout.setObjectName("operations_amount_layout")
+
+        self.operations_amount_fields.insert(0, QtWidgets.QSpinBox(self.operations_amount_widget))
+        self.operations_amount_fields[0].setObjectName("operations_amount_field_0")
+        self.operations_amount_fields[0].setRange(10000, 1000000)
+        self.operations_amount_fields[0].setValue(15000)
+        self.operations_amount_layout.addWidget(self.operations_amount_fields[0])
+
+        self.operations_amount_fields.insert(1, QtWidgets.QSpinBox(self.operations_amount_widget))
+        self.operations_amount_fields[1].setObjectName("operations_amount_field_1")
+        self.operations_amount_fields[1].setRange(10000, 1000000)
+        self.operations_amount_fields[1].setValue(50000)
+        self.operations_amount_layout.addWidget(self.operations_amount_fields[1])
+
+        self.operations_amount_fields.insert(2, QtWidgets.QSpinBox(self.operations_amount_widget))
+        self.operations_amount_fields[2].setObjectName("operations_amount_field_2")
+        self.operations_amount_fields[2].setRange(10000, 1000000)
+        self.operations_amount_fields[2].setValue(150000)
+        self.operations_amount_layout.addWidget(self.operations_amount_fields[2])
+
+        self.operations_amount_fields.insert(3, QtWidgets.QSpinBox(self.operations_amount_widget))
+        self.operations_amount_fields[3].setObjectName("operations_amount_field_3")
+        self.operations_amount_fields[3].setRange(10000, 1000000)
+        self.operations_amount_fields[3].setValue(300000)
+        self.operations_amount_layout.addWidget(self.operations_amount_fields[3])
+
+        self.operations_amount_fields.insert(4, QtWidgets.QSpinBox(self.operations_amount_widget))
+        self.operations_amount_fields[4].setObjectName("operations_amount_field_4")
+        self.operations_amount_fields[4].setRange(10000, 1000000)
+        self.operations_amount_fields[4].setValue(1000000)
+        self.operations_amount_layout.addWidget(self.operations_amount_fields[4])
+
+        self.additional_operations_widget = QtWidgets.QWidget(self.central_widget)
+        self.additional_operations_widget.setObjectName("additional_operations_widget")
+        self.additional_operations_widget.setGeometry(QtCore.QRect(110, 60, 141, 171))
+
+        self.additional_operations_layout = QtWidgets.QVBoxLayout(self.additional_operations_widget)
+        self.additional_operations_layout.setObjectName("additional_operations_layout")
+        self.additional_operations_layout.setContentsMargins(0, 0, 0, 0)
+
+        self.additional_operations_checkboxes.insert(0, QtWidgets.QCheckBox(self.additional_operations_widget))
+        self.additional_operations_checkboxes[0].setObjectName("additional_operations_checkbox_0")
+        self.additional_operations_checkboxes[0].setEnabled(False)
+        self.additional_operations_checkboxes[0].setChecked(True)
+        self.additional_operations_checkboxes[0].setText(QtCore.QCoreApplication.translate(
+            "MainWindow",
+            "Operacji"
+        ))
+        self.additional_operations_layout.addWidget(self.additional_operations_checkboxes[0])
+
+        self.additional_operations_checkboxes.insert(1, QtWidgets.QCheckBox(self.additional_operations_widget))
+        self.additional_operations_checkboxes[1].setObjectName("additional_operations_checkbox_1")
+        self.additional_operations_checkboxes[1].setText(QtCore.QCoreApplication.translate(
+            "MainWindow",
+            "Operacji dodatkowych"
+        ))
+        self.additional_operations_layout.addWidget(self.additional_operations_checkboxes[1])
+
+        self.additional_operations_checkboxes.insert(2, QtWidgets.QCheckBox(self.additional_operations_widget))
+        self.additional_operations_checkboxes[2].setObjectName("additional_operations_checkbox_2")
+        self.additional_operations_checkboxes[2].setText(QtCore.QCoreApplication.translate(
+            "MainWindow",
+            "Operacji dodatkowych"
+        ))
+        self.additional_operations_layout.addWidget(self.additional_operations_checkboxes[2])
+
+        self.additional_operations_checkboxes.insert(3, QtWidgets.QCheckBox(self.additional_operations_widget))
+        self.additional_operations_checkboxes[3].setObjectName("additional_operations_checkbox_3")
+        self.additional_operations_checkboxes[3].setText(QtCore.QCoreApplication.translate(
+            "MainWindow",
+            "Operacji dodatkowych"
+        ))
+        self.additional_operations_layout.addWidget(self.additional_operations_checkboxes[3])
+
+        self.additional_operations_checkboxes.insert(4, QtWidgets.QCheckBox(self.additional_operations_widget))
+        self.additional_operations_checkboxes[4].setObjectName("additional_operations_checkbox_4")
+        self.additional_operations_checkboxes[4].setText(QtCore.QCoreApplication.translate(
+            "MainWindow",
+            "Operacji dodatkowych"
+        ))
+        self.additional_operations_layout.addWidget(self.additional_operations_checkboxes[4])
+
+        self.operation_times_widget = QtWidgets.QWidget(self.central_widget)
+        self.operation_times_widget.setObjectName("operation_times_widget")
+        self.operation_times_widget.setGeometry(QtCore.QRect(290, 72, 221, 171))
+
+        self.operation_times_layout = QtWidgets.QHBoxLayout(self.operation_times_widget)
+        self.operation_times_layout.setObjectName("operation_times_layout")
+        self.operation_times_layout.setContentsMargins(0, 0, 0, 0)
+
+        self.procedural_times_output_layout = QtWidgets.QVBoxLayout()
+        self.procedural_times_output_layout.setObjectName("procedural_times_output_layout")
+
+        self.procedural_times_output_fields.insert(0, QtWidgets.QLineEdit(self.operation_times_widget))
+        self.procedural_times_output_fields[0].setObjectName("procedural_time_output_fields_0")
+        self.procedural_times_output_fields[0].setAlignment(QtCore.Qt.AlignCenter)
+        self.procedural_times_output_fields[0].setReadOnly(True)
+        self.procedural_times_output_fields[0].setText("-")
+        self.procedural_times_output_layout.addWidget(self.procedural_times_output_fields[0])
+
+        self.procedural_times_output_fields.insert(1, QtWidgets.QLineEdit(self.operation_times_widget))
+        self.procedural_times_output_fields[1].setObjectName("procedural_time_output_fields_1")
+        self.procedural_times_output_fields[1].setAlignment(QtCore.Qt.AlignCenter)
+        self.procedural_times_output_fields[1].setReadOnly(True)
+        self.procedural_times_output_fields[1].setText("-")
+        self.procedural_times_output_layout.addWidget(self.procedural_times_output_fields[1])
+
+        self.procedural_times_output_fields.insert(2, QtWidgets.QLineEdit(self.operation_times_widget))
+        self.procedural_times_output_fields[2].setObjectName("procedural_time_output_fields_2")
+        self.procedural_times_output_fields[2].setAlignment(QtCore.Qt.AlignCenter)
+        self.procedural_times_output_fields[2].setReadOnly(True)
+        self.procedural_times_output_fields[2].setText("-")
+        self.procedural_times_output_layout.addWidget(self.procedural_times_output_fields[2])
+
+        self.procedural_times_output_fields.insert(3, QtWidgets.QLineEdit(self.operation_times_widget))
+        self.procedural_times_output_fields[3].setObjectName("procedural_time_output_fields_3")
+        self.procedural_times_output_fields[3].setAlignment(QtCore.Qt.AlignCenter)
+        self.procedural_times_output_fields[3].setReadOnly(True)
+        self.procedural_times_output_fields[3].setText("-")
+        self.procedural_times_output_layout.addWidget(self.procedural_times_output_fields[3])
+
+        self.procedural_times_output_fields.insert(4, QtWidgets.QLineEdit(self.operation_times_widget))
+        self.procedural_times_output_fields[4].setObjectName("procedural_time_output_fields_4")
+        self.procedural_times_output_fields[4].setAlignment(QtCore.Qt.AlignCenter)
+        self.procedural_times_output_fields[4].setReadOnly(True)
+        self.procedural_times_output_fields[4].setText("-")
+        self.procedural_times_output_layout.addWidget(self.procedural_times_output_fields[4])
+
+        self.operation_times_layout.addLayout(self.procedural_times_output_layout)
+
+        self.oop_times_output_layout = QtWidgets.QVBoxLayout()
+        self.oop_times_output_layout.setObjectName("oop_times_output_layout")
+
+        self.oop_times_output_fields.insert(0, QtWidgets.QLineEdit(self.operation_times_widget))
+        self.oop_times_output_fields[0].setObjectName("timeOutputField0")
+        self.oop_times_output_fields[0].setAlignment(QtCore.Qt.AlignCenter)
+        self.oop_times_output_fields[0].setReadOnly(True)
+        self.oop_times_output_fields[0].setText("-")
+        self.oop_times_output_layout.addWidget(self.oop_times_output_fields[0])
+
+        self.oop_times_output_fields.insert(1, QtWidgets.QLineEdit(self.operation_times_widget))
+        self.oop_times_output_fields[1].setObjectName("timeOutputField1")
+        self.oop_times_output_fields[1].setAlignment(QtCore.Qt.AlignCenter)
+        self.oop_times_output_fields[1].setReadOnly(True)
+        self.oop_times_output_fields[1].setText("-")
+        self.oop_times_output_layout.addWidget(self.oop_times_output_fields[1])
+
+        self.oop_times_output_fields.insert(2, QtWidgets.QLineEdit(self.operation_times_widget))
+        self.oop_times_output_fields[2].setObjectName("timeOutputField2")
+        self.oop_times_output_fields[2].setAlignment(QtCore.Qt.AlignCenter)
+        self.oop_times_output_fields[2].setReadOnly(True)
+        self.oop_times_output_fields[2].setText("-")
+        self.oop_times_output_layout.addWidget(self.oop_times_output_fields[2])
+
+        self.oop_times_output_fields.insert(3, QtWidgets.QLineEdit(self.operation_times_widget))
+        self.oop_times_output_fields[3].setObjectName("timeOutputField3")
+        self.oop_times_output_fields[3].setAlignment(QtCore.Qt.AlignCenter)
+        self.oop_times_output_fields[3].setReadOnly(True)
+        self.oop_times_output_fields[3].setText("-")
+        self.oop_times_output_layout.addWidget(self.oop_times_output_fields[3])
+
+        self.oop_times_output_fields.insert(4, QtWidgets.QLineEdit(self.operation_times_widget))
+        self.oop_times_output_fields[4].setObjectName("timeOutputField4")
+        self.oop_times_output_fields[4].setAlignment(QtCore.Qt.AlignCenter)
+        self.oop_times_output_fields[4].setReadOnly(True)
+        self.oop_times_output_fields[4].setText("-")
+        self.oop_times_output_layout.addWidget(self.oop_times_output_fields[4])
+
+        self.operation_times_layout.addLayout(self.oop_times_output_layout)
+
+        self.calculate_button = QtWidgets.QPushButton(self.central_widget)
+        self.calculate_button.setObjectName("calculate_button")
+        self.calculate_button.setGeometry(QtCore.QRect(10, 240, 241, 41))
+        self.calculate_button.setText(QtCore.QCoreApplication.translate(
+            "MainWindow",
+            "Oblicz"
+        ))
+        self.calculate_button.clicked.connect(lambda: self.count())
+
+        self.chart = PlotWidget(self.central_widget)
+        self.chart.setObjectName("chart")
+        self.chart.setGeometry(QtCore.QRect(550, 40, 321, 221))
+        self.chart.showGrid(x=True, y=True)
+
+        self.console = QtWidgets.QTextBrowser(self.central_widget)
+        self.console.setObjectName("console")
         self.console.setGeometry(QtCore.QRect(10, 330, 861, 91))
         self.console.setAutoFillBackground(False)
-        self.console.setObjectName("console")
-        self.label_4 = QtWidgets.QLabel(self.centralwidget)
-        self.label_4.setGeometry(QtCore.QRect(10, 310, 111, 16))
-        font = QtGui.QFont()
-        font.setPointSize(10)
-        self.label_4.setFont(font)
-        self.label_4.setObjectName("label_4")        
-        self.plotArea = PlotWidget(self.centralwidget)
-        self.plotArea.setGeometry(QtCore.QRect(550, 40, 321, 221))
-        self.plotArea.setObjectName("plotArea")
-        self.plotArea.showGrid(x=True, y=True)
-        self.line = QtWidgets.QFrame(self.centralwidget)
-        self.line.setGeometry(QtCore.QRect(10, 290, 861, 20))
-        self.line.setFrameShape(QtWidgets.QFrame.HLine)
-        self.line.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.line.setObjectName("line")
-        self.label_5 = QtWidgets.QLabel(self.centralwidget)
-        self.label_5.setGeometry(QtCore.QRect(550, 10, 321, 21))
-        font = QtGui.QFont()
-        font.setPointSize(9)
-        self.label_5.setFont(font)
-        self.label_5.setObjectName("label_5")
-        self.label_6 = QtWidgets.QLabel(self.centralwidget)
-        self.label_6.setGeometry(QtCore.QRect(640, 260, 131, 31))
-        font = QtGui.QFont()
-        font.setPointSize(10)
-        self.label_6.setFont(font)
-        self.label_6.setObjectName("label_6")
-        self.label_7 = VerticalLabel(self.centralwidget)
-        self.label_7.setGeometry(QtCore.QRect(525, 30, 21, 190))
-        font = QtGui.QFont()
-        font.setPointSize(10)
-        self.label_7.setFont(font)
-        self.label_7.setLayoutDirection(QtCore.Qt.LeftToRight)
-        self.label_7.setAutoFillBackground(False)
-        self.label_7.setScaledContents(False)
-        self.label_7.setWordWrap(False)
-        self.label_7.setOpenExternalLinks(False)
-        self.label_7.setObjectName("label_7")
-        self.line_2 = QtWidgets.QFrame(self.centralwidget)
-        self.line_2.setGeometry(QtCore.QRect(260, 10, 21, 271))
-        self.line_2.setFrameShape(QtWidgets.QFrame.VLine)
-        self.line_2.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.line_2.setObjectName("line_2")
-        self.layoutWidget = QtWidgets.QWidget(self.centralwidget)
-        self.layoutWidget.setGeometry(QtCore.QRect(110, 60, 141, 171))
-        self.layoutWidget.setObjectName("layoutWidget")
-        self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.layoutWidget)
-        self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
-        self.verticalLayout_3.setObjectName("verticalLayout_3")
-        self.additionalOperationsCheckBox0 = QtWidgets.QCheckBox(self.layoutWidget)
-        self.additionalOperationsCheckBox0.setEnabled(False)
-        self.additionalOperationsCheckBox0.setChecked(True)
-        self.additionalOperationsCheckBox0.setObjectName("additionalOperationsCheckBox0")
-        self.verticalLayout_3.addWidget(self.additionalOperationsCheckBox0)
-        self.additionalOperationsCheckBox1 = QtWidgets.QCheckBox(self.layoutWidget)
-        self.additionalOperationsCheckBox1.setObjectName("additionalOperationsCheckBox1")
-        self.verticalLayout_3.addWidget(self.additionalOperationsCheckBox1)
-        self.additionalOperationsCheckBox2 = QtWidgets.QCheckBox(self.layoutWidget)
-        self.additionalOperationsCheckBox2.setObjectName("additionalOperationsCheckBox2")
-        self.verticalLayout_3.addWidget(self.additionalOperationsCheckBox2)
-        self.additionalOperationsCheckBox3 = QtWidgets.QCheckBox(self.layoutWidget)
-        self.additionalOperationsCheckBox3.setObjectName("additionalOperationsCheckBox3")
-        self.verticalLayout_3.addWidget(self.additionalOperationsCheckBox3)
-        self.additionalOperationsCheckBox4 = QtWidgets.QCheckBox(self.layoutWidget)
-        self.additionalOperationsCheckBox4.setObjectName("additionalOperationsCheckBox4")
-        self.verticalLayout_3.addWidget(self.additionalOperationsCheckBox4)
-        self.layoutWidget1 = QtWidgets.QWidget(self.centralwidget)
-        self.layoutWidget1.setGeometry(QtCore.QRect(10, 60, 91, 171))
-        self.layoutWidget1.setObjectName("layoutWidget1")
-        self.verticalLayout = QtWidgets.QVBoxLayout(self.layoutWidget1)
-        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
-        self.verticalLayout.setObjectName("verticalLayout")
-        self.operationsNumberField0 = QtWidgets.QSpinBox(self.layoutWidget1)
-        self.operationsNumberField0.setObjectName("operationsNumberField0")
-        self.verticalLayout.addWidget(self.operationsNumberField0)
-        self.operationsNumberField0.setRange(10000, 1000000)
-        self.operationsNumberField0.setValue(15000)
-        self.operationsNumberField1 = QtWidgets.QSpinBox(self.layoutWidget1)
-        self.operationsNumberField1.setObjectName("operationsNumberField1")
-        self.verticalLayout.addWidget(self.operationsNumberField1)
-        self.operationsNumberField1.setRange(10000, 1000000)
-        self.operationsNumberField1.setValue(50000)
-        self.operationsNumberField2 = QtWidgets.QSpinBox(self.layoutWidget1)
-        self.operationsNumberField2.setObjectName("operationsNumberField2")
-        self.verticalLayout.addWidget(self.operationsNumberField2)
-        self.operationsNumberField2.setRange(10000, 1000000)
-        self.operationsNumberField2.setValue(150000)
-        self.operationsNumberField3 = QtWidgets.QSpinBox(self.layoutWidget1)
-        self.operationsNumberField3.setObjectName("operationsNumberField3")
-        self.verticalLayout.addWidget(self.operationsNumberField3)
-        self.operationsNumberField3.setRange(10000, 1000000)
-        self.operationsNumberField3.setValue(300000)
-        self.operationsNumberField4 = QtWidgets.QSpinBox(self.layoutWidget1)
-        self.operationsNumberField4.setObjectName("operationsNumberField4")
-        self.operationsNumberField4.setRange(10000, 1000000)
-        self.operationsNumberField4.setValue(1000000)
-        self.verticalLayout.addWidget(self.operationsNumberField4)
-        self.label_8 = QtWidgets.QLabel(self.centralwidget)
-        self.label_8.setGeometry(QtCore.QRect(10, 10, 121, 21))
-        font = QtGui.QFont()
-        font.setPointSize(12)
-        self.label_8.setFont(font)
-        self.label_8.setObjectName("label_8")
-        self.label_10 = QtWidgets.QLabel(self.centralwidget)
-        self.label_10.setGeometry(QtCore.QRect(403, 40, 108, 26))
-        self.label_10.setObjectName("label_10")
-        self.label_10.setAlignment(QtCore.Qt.AlignCenter)
-        self.label_10.setStyleSheet("background-color: #0ff")
-        self.widget = QtWidgets.QWidget(self.centralwidget)
-        self.widget.setGeometry(QtCore.QRect(290, 72, 221, 171))
-        self.widget.setObjectName("widget")
-        self.horizontalLayout = QtWidgets.QHBoxLayout(self.widget)
-        self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
-        self.horizontalLayout.setObjectName("horizontalLayout")
-        self.verticalLayout_4 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_4.setObjectName("verticalLayout_4")
-        self.timeOutputField0_2 = QtWidgets.QLineEdit(self.widget)
-        self.timeOutputField0_2.setEnabled(False)
-        self.timeOutputField0_2.setText("")
-        self.timeOutputField0_2.setObjectName("timeOutputField0_2")
-        self.timeOutputField0_2.setAlignment(QtCore.Qt.AlignCenter)
-        self.verticalLayout_4.addWidget(self.timeOutputField0_2)
-        self.timeOutputField1_2 = QtWidgets.QLineEdit(self.widget)
-        self.timeOutputField1_2.setEnabled(False)
-        self.timeOutputField1_2.setObjectName("timeOutputField1_2")
-        self.timeOutputField1_2.setAlignment(QtCore.Qt.AlignCenter)
-        self.verticalLayout_4.addWidget(self.timeOutputField1_2)
-        self.timeOutputField2_2 = QtWidgets.QLineEdit(self.widget)
-        self.timeOutputField2_2.setEnabled(False)
-        self.timeOutputField2_2.setObjectName("timeOutputField2_2")
-        self.timeOutputField2_2.setAlignment(QtCore.Qt.AlignCenter)
-        self.verticalLayout_4.addWidget(self.timeOutputField2_2)
-        self.timeOutputField3_2 = QtWidgets.QLineEdit(self.widget)
-        self.timeOutputField3_2.setEnabled(False)
-        self.timeOutputField3_2.setObjectName("timeOutputField3_2")
-        self.timeOutputField3_2.setAlignment(QtCore.Qt.AlignCenter)
-        self.verticalLayout_4.addWidget(self.timeOutputField3_2)
-        self.timeOutputField4_2 = QtWidgets.QLineEdit(self.widget)
-        self.timeOutputField4_2.setEnabled(False)
-        self.timeOutputField4_2.setObjectName("timeOutputField4_2")
-        self.timeOutputField4_2.setAlignment(QtCore.Qt.AlignCenter)
-        self.verticalLayout_4.addWidget(self.timeOutputField4_2)
-        self.horizontalLayout.addLayout(self.verticalLayout_4)
-        self.verticalLayout_2 = QtWidgets.QVBoxLayout()
-        self.verticalLayout_2.setObjectName("verticalLayout_2")
-        self.timeOutputField0 = QtWidgets.QLineEdit(self.widget)
-        self.timeOutputField0.setEnabled(False)
-        self.timeOutputField0.setText("")
-        self.timeOutputField0.setObjectName("timeOutputField0")
-        self.timeOutputField0.setAlignment(QtCore.Qt.AlignCenter)
-        self.verticalLayout_2.addWidget(self.timeOutputField0)
-        self.timeOutputField1 = QtWidgets.QLineEdit(self.widget)
-        self.timeOutputField1.setEnabled(False)
-        self.timeOutputField1.setObjectName("timeOutputField1")
-        self.timeOutputField1.setAlignment(QtCore.Qt.AlignCenter)
-        self.verticalLayout_2.addWidget(self.timeOutputField1)
-        self.timeOutputField2 = QtWidgets.QLineEdit(self.widget)
-        self.timeOutputField2.setEnabled(False)
-        self.timeOutputField2.setObjectName("timeOutputField2")
-        self.timeOutputField2.setAlignment(QtCore.Qt.AlignCenter)
-        self.verticalLayout_2.addWidget(self.timeOutputField2)
-        self.timeOutputField3 = QtWidgets.QLineEdit(self.widget)
-        self.timeOutputField3.setEnabled(False)
-        self.timeOutputField3.setObjectName("timeOutputField3")
-        self.timeOutputField3.setAlignment(QtCore.Qt.AlignCenter)
-        self.verticalLayout_2.addWidget(self.timeOutputField3)
-        self.timeOutputField4 = QtWidgets.QLineEdit(self.widget)
-        self.timeOutputField4.setEnabled(False)
-        self.timeOutputField4.setObjectName("timeOutputField4")
-        self.timeOutputField4.setAlignment(QtCore.Qt.AlignCenter)
-        self.verticalLayout_2.addWidget(self.timeOutputField4)
-        self.horizontalLayout.addLayout(self.verticalLayout_2)
-        self.label_9 = QtWidgets.QLabel(self.centralwidget)
-        self.label_9.setGeometry(QtCore.QRect(290, 40, 107, 26))
-        self.label_9.setObjectName("label_9")
-        self.label_9.setAlignment(QtCore.Qt.AlignCenter)
-        self.label_9.setStyleSheet("background-color: #f00")
-        MainWindow.setCentralWidget(self.centralwidget)
 
-        self.retranslateUi(MainWindow)
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.setFixedSize(880, 430)
+        MainWindow.setCentralWidget(self.central_widget)
+        MainWindow.setWindowTitle(QtCore.QCoreApplication.translate(
+            "MainWindow",
+            "Porównanie czasów operacji wykonanych proceduralnie i obiektowo (M. Liber, P. Lyschik, 2020)"
+        ))
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
-        self.threadpool = QThreadPool()
-        self.threadpool.setMaxThreadCount(1)
+    def disable_ui(self):
+        self.calculate_button.setEnabled(False)
 
-        self.operationCheckBoxes = [self.additionalOperationsCheckBox1, self.additionalOperationsCheckBox2, self.additionalOperationsCheckBox3, self.additionalOperationsCheckBox4]
-        self.operationsNumberFields = [self.operationsNumberField0, self.operationsNumberField1, self.operationsNumberField2, self.operationsNumberField3, self.operationsNumberField4]
-        self.timeOutputAccessTableObjective = [self.timeOutputField0, self.timeOutputField1, self.timeOutputField2, self.timeOutputField3, self.timeOutputField4]
-        self.timeOutputAccessTableProcedural = [self.timeOutputField0_2, self.timeOutputField1_2, self.timeOutputField2_2, self.timeOutputField3_2, self.timeOutputField4_2]
+        for field in self.operations_amount_fields:
+            field.setEnabled(False)
 
-        self.mainOperationsNumber = 0
-        self.executionTimes = [[0], [0]]
+        for check_box in self.additional_operations_checkboxes[1:]:
+            check_box.setEnabled(False)
 
-        self.pushButton.clicked.connect(lambda : self.count())
+    def enable_ui(self):
+        self.calculate_button.setEnabled(True)
 
-    def retranslateUi(self, MainWindow):
-        _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "Porównanie czasów operacji wykonanych proceduralnie i obiektowo (M. Liber, P. Lyschik, 2020)"))
-        self.pushButton.setText(_translate("MainWindow", "Oblicz"))
-        self.label.setText(_translate("MainWindow", "Ilość operacji"))
-        self.label_2.setText(_translate("MainWindow", "Wybór operacji do wykonania"))
-        self.label_3.setText(_translate("MainWindow", "Czasy wykonania (milisekundy)"))
-        self.label_4.setText(_translate("MainWindow", "Konsola wynikowa"))
-        self.label_5.setText(_translate("MainWindow", "Wykres czasu działania programu w zależności od podejścia"))
-        self.label_6.setText(_translate("MainWindow", "Ilość operacji (tys)"))
-        self.label_7.setText(_translate("MainWindow", "Czas wykonania (milisekundy)"))
-        self.additionalOperationsCheckBox0.setText(_translate("MainWindow", "Operacji"))
-        self.additionalOperationsCheckBox1.setText(_translate("MainWindow", "Operacji dodatkowych"))
-        self.additionalOperationsCheckBox2.setText(_translate("MainWindow", "Operacji dodatkowych"))
-        self.additionalOperationsCheckBox3.setText(_translate("MainWindow", "Operacji dodatkowych"))
-        self.additionalOperationsCheckBox4.setText(_translate("MainWindow", "Operacji dodatkowych"))
-        self.label_8.setText(_translate("MainWindow", "Dane wejściowe"))
-        self.label_10.setText(_translate("MainWindow", "Obiektowo"))
-        self.label_9.setText(_translate("MainWindow", "Proceduralnie"))
+        for field in self.operations_amount_fields:
+            field.setEnabled(True)
 
-    def disableUI(self):
-        self.pushButton.setEnabled(False)
-        
-        for numberField in self.operationsNumberFields:
-            numberField.setEnabled(False)
+        for check_box in self.additional_operations_checkboxes[1:]:
+            check_box.setEnabled(True)
 
-        for checkBox in self.operationCheckBoxes:
-            checkBox.setEnabled(False)
+    def clear_time_tables(self):
+        for field in self.procedural_times_output_fields:
+            field.setText("-")
 
-    def enableUI(self):
-        self.pushButton.setEnabled(True)
+        for field in self.oop_times_output_fields:
+            field.setText("-")
 
-        for numberField in self.operationsNumberFields:
-            numberField.setEnabled(True)
-
-        for checkBox in self.operationCheckBoxes:
-            checkBox.setEnabled(True)
-        
-    def clearTimeTables(self):
-        for elementProcedural in self.timeOutputAccessTableProcedural:
-            elementProcedural.setText("")
-
-        for elementObjective in self.timeOutputAccessTableObjective:
-            elementObjective.setText("")
-
-    def isCalculationFinished(self):
-        for elementProcedural in self.timeOutputAccessTableProcedural[:self.mainOperationsNumber-1]:
-            if(elementProcedural.text() == ""):
+    def is_calculation_finished(self):
+        for element in self.procedural_times_output_fields[:self.main_operations_number - 1]:
+            if element.text() == "":
                 return False
 
-        for elementObjective in self.timeOutputAccessTableObjective[:self.mainOperationsNumber-1]:
-            if(elementObjective.text() == ""):
+        for element in self.oop_times_output_fields[:self.main_operations_number - 1]:
+            if element.text() == "":
                 return False
 
-        return True 
+        return True
 
-    def clearChart(self):
-        self.plotArea.clear()
+    def clear_chart(self):
+        self.chart.clear()
 
-    def clearTimes(self):
-        self.executionTimes = [[0], [0]]
+    def clear_times(self):
+        self.execution_times = [[0], [0]]
 
-    def clearConsole(self):
+    def clear_console(self):
         self.console.clear()
 
-    def clearData(self):
-        self.clearTimeTables()
-        self.clearChart()
-        self.clearTimes()
-        self.clearConsole()
+    def clear_data(self):
+        self.clear_time_tables()
+        self.clear_chart()
+        self.clear_times()
+        self.clear_console()
 
-    def consolePrintLine(self, message):
-        dateTimeNow = datetime.datetime.now()
-        currentDateTime = dateTimeNow.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+    def console_print_line(self, message):
+        date_time_now = datetime.datetime.now()
+        current_date_time = date_time_now.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
 
-        self.console.append("[{0}] {1}".format(str(currentDateTime), str(message)))
+        self.console.append("[{0}] {1}".format(current_date_time, message))
 
-    def printExecutionTime(self, operation_type, operations_number, execution_time):
-        self.consolePrintLine("Wykonanie {0} operacji w podejściu {1} zajęło {2} ms".format(operations_number, operation_type, execution_time))
+    def print_execution_time(self, operation_type, operations_number, execution_time):
+        self.console_print_line("Wykonanie {0:,} operacji w podejściu {1} zajęło {2} ms.".format(
+            operations_number,
+            operation_type,
+            execution_time
+        ).replace(',', ' '))
 
-    def getData(self):
-        dataTable = []
-        dataTable.append(0)
+    def get_data(self):
+        data_table = [0, self.operations_amount_fields[0].value()]
 
-        if(len(self.operationsNumberField0.text()) > 0):
-            dataTable.append(int(self.operationsNumberField0.text()))
+        if self.additional_operations_checkboxes[1].isChecked():
+            data_table.append(self.operations_amount_fields[1].value())
 
-        if(len(self.operationsNumberField1.text()) > 0 and self.additionalOperationsCheckBox1.isChecked()):
-            dataTable.append(int(self.operationsNumberField1.text()))
+        if self.additional_operations_checkboxes[2].isChecked():
+            data_table.append(self.operations_amount_fields[2].value())
 
-        if(len(self.operationsNumberField2.text()) > 0 and self.additionalOperationsCheckBox2.isChecked()):
-            dataTable.append(int(self.operationsNumberField2.text()))
+        if self.additional_operations_checkboxes[3].isChecked():
+            data_table.append(self.operations_amount_fields[3].value())
 
-        if(len(self.operationsNumberField3.text()) > 0 and self.additionalOperationsCheckBox3.isChecked()):
-            dataTable.append(int(self.operationsNumberField3.text()))
+        if self.additional_operations_checkboxes[4].isChecked():
+            data_table.append(self.operations_amount_fields[4].value())
 
-        if(len(self.operationsNumberField4.text()) > 0 and self.additionalOperationsCheckBox4.isChecked()):
-            dataTable.append(int(self.operationsNumberField4.text()))
-
-        return dataTable
+        return data_table
 
     def count(self):
-        """Counting how long opeartions last in multi threads"""
-        self.disableUI()
-        self.clearData()
-        self.consolePrintLine("Rozpoczęto obliczenia")
+        self.disable_ui()
+        self.clear_data()
+        self.console_print_line("Rozpoczęto obliczenia.")
 
-        numberOfOperations = self.getData()
-        self.mainOperationsNumber = len(numberOfOperations)
+        number_of_operations = self.get_data()
+        self.main_operations_number = len(number_of_operations)
 
-        for k in range(1, len(numberOfOperations)):
-            self.multithreadExecute(numberOfOperations[k], operationProcedural)
-            self.multithreadExecute(numberOfOperations[k], operationObjective)
+        for i in range(1, len(number_of_operations)):
+            self.multi_thread_execute(number_of_operations[i], operation_procedural)
+            self.multi_thread_execute(number_of_operations[i], operation_objective)
 
-    def updateProcedural(self, result):
-        self.executionTimes[0].append(result[0])
-        self.printExecutionTime("proceduralnym", result[1], self.executionTimes[0][-1])
-        self.timeOutputAccessTableProcedural[len(self.executionTimes[0]) - 2].setText(str(result[0]))
-        self.updatePlots()
-        if(self.isCalculationFinished()):
-            self.enableUI()
-            self.consolePrintLine("Zakończono obliczenia")
+    def update_procedural(self, result):
+        self.execution_times[0].append(result[0])
+        self.procedural_times_output_fields[len(self.execution_times[0]) - 2].setText(str(result[0]))
+        self.update_plots()
+        self.print_execution_time("proceduralnym", result[1], self.execution_times[0][-1])
+
+        if self.is_calculation_finished():
+            self.console_print_line("Zakończono obliczenia.")
+            self.enable_ui()
 
 
-    def updateObjective(self, result):
-        self.executionTimes[1].append(result[0])
-        self.printExecutionTime("obiektowym", result[1], self.executionTimes[1][-1])
-        self.timeOutputAccessTableObjective[len(self.executionTimes[1]) - 2].setText(str(result[0]))
-        self.updatePlots()
-        if(self.isCalculationFinished()):
-            self.enableUI()
-            self.consolePrintLine("Zakończono obliczenia")
+    def update_objective(self, result):
+        self.execution_times[1].append(result[0])
+        self.oop_times_output_fields[len(self.execution_times[1]) - 2].setText(str(result[0]))
+        self.update_plots()
+        self.print_execution_time("obiektowym", result[1], self.execution_times[1][-1])
 
-    def updatePlots(self):
-        self.plotArea.plot(self.reduceDataForChartByTousend(self.getData()[:len(self.executionTimes[0])]), self.executionTimes[0], pen=(255, 0, 0), name='Proceduralnie', symbol='o', symbolSize=5, symbolBrush=(255, 0, 0), symbolPen=(255, 0, 0))
-        self.plotArea.plot(self.reduceDataForChartByTousend(self.getData()[:len(self.executionTimes[1])]), self.executionTimes[1], pen=(0, 255, 255), name='Obiektowo', symbol='o', symbolSize=5, symbolBrush=(0, 255, 255), symbolPen=(0, 255, 255))
+        if self.is_calculation_finished():
+            self.console_print_line("Zakończono obliczenia.")
+            self.enable_ui()
 
-    def reduceDataForChartByTousend(self, data):
-        new_data = []
-        
+    def update_plots(self):
+        self.chart.plot(
+            self.reduce_data_for_chart_by_thousand(self.get_data()[:len(self.execution_times[0])]),
+            self.execution_times[0],
+            name='Proceduralnie',
+            pen=(255, 0, 0),
+            symbol='o',
+            symbolSize=5,
+            symbolPen=(255, 0, 0),
+            symbolBrush=(255, 0, 0)
+        )
+
+        self.chart.plot(
+            self.reduce_data_for_chart_by_thousand(self.get_data()[:len(self.execution_times[1])]),
+            self.execution_times[1],
+            name='Obiektowo',
+            pen=(0, 255, 255),
+            symbol='o',
+            symbolSize=5,
+            symbolPen=(0, 255, 255),
+            symbolBrush=(0, 255, 255)
+        )
+
+    def reduce_data_for_chart_by_thousand(self, data):
+        reduced_data = []
+
         for element in data:
-            new_data.append(element/1000)
+            reduced_data.append(element / 1000)
 
-        return new_data
+        return reduced_data
 
-    def multithreadExecute(self, operations_number, opeartion_type):
-        worker = Worker(opeartion_type, operations_number)
-        
-        if(opeartion_type == operationProcedural):
-            worker.signals.result.connect(self.updateProcedural)
+    def multi_thread_execute(self, operations_number, operation_type):
+        worker = Worker(operation_type, operations_number)
+
+        if operation_type == operation_procedural:
+            worker.signals.result.connect(self.update_procedural)
         else:
-            worker.signals.result.connect(self.updateObjective)
+            worker.signals.result.connect(self.update_objective)
 
-        self.threadpool.start(worker)
+        self.thread_pool.start(worker)
 
 
-def operationProcedural(size):
+def operation_procedural(size):
     accounts = {}
 
     Procedural.create_account(accounts, 'Foo', 'Bar', 4578220122)
@@ -420,7 +538,7 @@ def operationProcedural(size):
     Procedural.clear_accounts(accounts)
 
 
-def operationObjective(size):
+def operation_objective(size):
     owner_fixtures = [
         OOP.Owner('Foo', 'Bar'),
         OOP.Owner('Foo', 'Baz')
@@ -452,42 +570,29 @@ def operationObjective(size):
         bank.make_transfer(bank.get_account(2347885320), bank.get_account(4578220122), 2)
 
 
-class VerticalLabel(QLabel):
-    def __init__(self, *args):
-        QLabel.__init__(self, *args)
-
-    def paintEvent(self, event):
-        painter = QtGui.QPainter(self)
-        painter.translate(0, self.height())
-        painter.rotate(-90)
-        painter.drawText(0, self.width()/2, self.text())
-        painter.end()
-
-
 class Worker(QRunnable):
-
-    def __init__(self, opeartion_type, operations_number):
+    def __init__(self, operation_type, operations_number):
         super(Worker, self).__init__()
-        self.opeartion_type = opeartion_type
+        self.operation_type = operation_type
         self.operations_number = operations_number
         self.signals = WorkerSignals()
 
-    def getNumberOfEachOperation(self, number_of_operations):
-        return int(number_of_operations/4)
+    def get_number_of_each_operation(self, number_of_operations):
+        return int(number_of_operations / 4)
 
-    def microsecondsToMiliseconds(self, time_micro):
-        return int(time_micro/1000)
+    def microseconds_to_miliseconds(self, time_micro):
+        return time_micro / 1000
 
     @pyqtSlot()
     def run(self):
         try:
-            each_operation_number = self.getNumberOfEachOperation(self.operations_number)
+            each_operation_number = self.get_number_of_each_operation(self.operations_number)
 
-            startTime = datetime.datetime.now()
-            self.opeartion_type(each_operation_number)
-            endTime = datetime.datetime.now()
+            start_time = datetime.datetime.now()
+            self.operation_type(each_operation_number)
+            end_time = datetime.datetime.now()
 
-            result = (self.microsecondsToMiliseconds((endTime - startTime).microseconds), self.operations_number)
+            result = (self.microseconds_to_miliseconds((end_time - start_time).microseconds), self.operations_number)
         except:
             traceback.print_exc()
             exctype, value = sys.exc_info()[:2]
@@ -504,11 +609,23 @@ class WorkerSignals(QObject):
     result = pyqtSignal(object)
 
 
+class VerticalLabel(QLabel):
+    def __init__(self, *args):
+        QLabel.__init__(self, *args)
+
+    def paintEvent(self, event):
+        painter = QtGui.QPainter(self)
+        painter.translate(0, self.height())
+        painter.rotate(-90)
+        painter.drawText(23, (self.width() / 2) + 4, self.text())
+        painter.end()
+
+
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
+    ui = UIMainWindow()
+    ui.setup_ui(MainWindow)
     MainWindow.show()
     sys.exit(app.exec_())
