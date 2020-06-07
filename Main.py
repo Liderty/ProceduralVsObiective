@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 import datetime
 import traceback
 from typing import List
@@ -473,9 +472,11 @@ class UIMainWindow(object):
             self.enable_ui()
 
     def update_plots(self):
+        chart_data_procedural = self.prepare_chart_data(0)
+
         self.chart.plot(
-            self.reduce_data_for_chart_by_thousand(self.get_data()[:len(self.execution_times[0])]),
-            self.execution_times[0],
+            chart_data_procedural[0],
+            chart_data_procedural[1],
             name='Proceduralnie',
             pen=(255, 0, 0),
             symbol='o',
@@ -484,9 +485,11 @@ class UIMainWindow(object):
             symbolBrush=(255, 0, 0)
         )
 
+        chart_data_oop = self.prepare_chart_data(1)
+
         self.chart.plot(
-            self.reduce_data_for_chart_by_thousand(self.get_data()[:len(self.execution_times[1])]),
-            self.execution_times[1],
+            chart_data_oop[0],
+            chart_data_oop[1],
             name='Obiektowo',
             pen=(0, 255, 255),
             symbol='o',
@@ -494,6 +497,32 @@ class UIMainWindow(object):
             symbolPen=(0, 255, 255),
             symbolBrush=(0, 255, 255)
         )
+
+    def prepare_chart_data(self, data_id):
+        number_of_operations = self.reduce_data_for_chart_by_thousand(self.get_data()[:len(self.execution_times[data_id])])
+        times = self.execution_times[data_id]
+
+        return self.sort_two_tables_by_first(number_of_operations, times)
+
+    def sort_two_tables_by_first(self, sorted_table, other_table):
+        while True:
+            edition_flag = 0
+
+            for i in range(len(sorted_table)-1):
+                print(i)
+                if(sorted_table[i] > sorted_table[i+1]):
+                    tmp = sorted_table[i]
+                    sorted_table[i] = sorted_table[i+1] 
+                    sorted_table[i+1] = tmp
+
+                    tmp_other = other_table[i]
+                    other_table[i] = other_table[i+1] 
+                    other_table[i+1] = tmp_other
+
+                    edition_flag += 1
+
+            if(edition_flag == 0):
+                return (sorted_table, other_table)
 
     def reduce_data_for_chart_by_thousand(self, data):
         reduced_data = []
