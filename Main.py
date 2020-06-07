@@ -228,6 +228,7 @@ class Ui_MainWindow(object):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
         self.threadpool = QThreadPool()
+        self.threadpool.setMaxThreadCount(1)
 
         self.operationCheckBoxes = [self.additionalOperationsCheckBox1, self.additionalOperationsCheckBox2, self.additionalOperationsCheckBox3, self.additionalOperationsCheckBox4]
         self.operationsNumberFields = [self.operationsNumberField0, self.operationsNumberField1, self.operationsNumberField2, self.operationsNumberField3, self.operationsNumberField4]
